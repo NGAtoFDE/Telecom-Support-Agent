@@ -1,194 +1,86 @@
-"""
-Shared enumerations used throughout the Telecom Support Agent.
+"""Single source of truth for every taxonomy in the system.
 
-This module defines application-wide enumerations shared across multiple
-layers of the application. These enums provide type safety, eliminate
-hardcoded string literals, and improve code readability.
-
-Guidelines
-----------
-- Use StrEnum + auto() for readable string values.
-- Keep enums lightweight and dependency-free.
-- Shared enums may represent infrastructure or domain concepts when
-  they are used across multiple application layers.
-- Requires Python 3.11+.
+Nothing else in the codebase is allowed to define these string values inline. A node,
+a prompt renderer, a routing table and an eval runner must all agree on the exact same
+set of categories, priorities, queues and providers — so they all import from here.
 """
 
-from enum import StrEnum, auto
+from __future__ import annotations
+
+from enum import Enum
 
 
-# ==============================================================================
-# Application
-# ==============================================================================
+class StrEnum(str, Enum):
+    """str + Enum so values JSON-serialise as their plain string form."""
 
-
-class Environment(StrEnum):
-    """Supported application environments."""
-
-    DEVELOPMENT = auto()
-    TESTING = auto()
-    STAGING = auto()
-    PRODUCTION = auto()
-
-
-# ==============================================================================
-# AI Providers
-# ==============================================================================
-
-
-class LLMProvider(StrEnum):
-    """Supported Large Language Model providers."""
-
-    AZURE = auto()
-    GROQ = auto()
-
-
-class EmbeddingProvider(StrEnum):
-    """Supported embedding model providers."""
-
-    HUGGINGFACE = auto()
-
-
-class ComputeDevice(StrEnum):
-    """Supported inference devices."""
-
-    CPU = auto()
-    CUDA = auto()
-    MPS = auto()
-
-
-# ==============================================================================
-# Retrieval
-# ==============================================================================
-
-
-class VectorStoreType(StrEnum):
-    """Supported vector store implementations."""
-
-    FAISS = auto()
-
-
-class RetrieverType(StrEnum):
-    """Supported document retrieval strategies."""
-
-    VECTOR = auto()
-    BM25 = auto()
-    HYBRID = auto()
-
-
-# ==============================================================================
-# Conversation
-# ==============================================================================
-
-
-class MessageRole(StrEnum):
-    """Supported chat message roles."""
-
-    SYSTEM = auto()
-    USER = auto()
-    ASSISTANT = auto()
-    TOOL = auto()
-
-
-class ResponseStatus(StrEnum):
-    """Response execution status."""
-
-    SUCCESS = auto()
-    PARTIAL_SUCCESS = auto()
-    ERROR = auto()
-
-
-# ==============================================================================
-# Telecom Domain
-# ==============================================================================
+    def __str__(self) -> str:  # pragma: no cover - trivial
+        return str(self.value)
 
 
 class IssueCategory(StrEnum):
-    """Supported customer issue categories."""
-
-    BILLING = auto()
-    NETWORK = auto()
-    SIM = auto()
-    DEVICE = auto()
-    RECHARGE = auto()
-    ROAMING = auto()
-    UNKNOWN = auto()
+    NETWORK_COVERAGE = "NETWORK_COVERAGE"
+    DATA_SLOW = "DATA_SLOW"
+    CALL_DROP = "CALL_DROP"
+    BILLING_DISPUTE = "BILLING_DISPUTE"
+    RECHARGE_PAYMENT_FAILED = "RECHARGE_PAYMENT_FAILED"
+    SIM_ACTIVATION = "SIM_ACTIVATION"
+    SIM_SWAP_PORTING = "SIM_SWAP_PORTING"
+    ROAMING = "ROAMING"
+    VAS_SUBSCRIPTION = "VAS_SUBSCRIPTION"
+    DEVICE_CONFIG = "DEVICE_CONFIG"
+    ACCOUNT_KYC = "ACCOUNT_KYC"
+    OTHER = "OTHER"
 
 
 class Priority(StrEnum):
-    """Support ticket priority."""
+    """P1 no service / suspected outage · P2 severely degraded ·
+    P3 billing or provisioning dispute · P4 informational."""
 
-    LOW = auto()
-    MEDIUM = auto()
-    HIGH = auto()
-    CRITICAL = auto()
+    P1 = "P1"
+    P2 = "P2"
+    P3 = "P3"
+    P4 = "P4"
 
 
 class EscalationQueue(StrEnum):
-    """Support escalation queues."""
-
-    L1 = auto()
-    L2 = auto()
-    L3 = auto()
-
-
-# ==============================================================================
-# Documents
-# ==============================================================================
+    NOC_L2 = "NOC_L2"
+    BILLING_OPS = "BILLING_OPS"
+    SIM_PROVISIONING = "SIM_PROVISIONING"
+    ROAMING_PARTNER_DESK = "ROAMING_PARTNER_DESK"
+    RETENTION = "RETENTION"
+    GENERAL_L1 = "GENERAL_L1"
 
 
-class DocumentType(StrEnum):
-    """Supported knowledge base document formats."""
-
-    PDF = auto()
-    DOCX = auto()
-    TXT = auto()
-    HTML = auto()
-    CSV = auto()
-    JSON = auto()
-
-    # Explicit value because auto() would generate "markdown"
-    MARKDOWN = "md"
+class Resolution(StrEnum):
+    RESOLVED = "RESOLVED"
+    NEEDS_INFO = "NEEDS_INFO"
+    ESCALATED = "ESCALATED"
 
 
-# ==============================================================================
-# Logging
-# ==============================================================================
+class Provider(StrEnum):
+    AZURE_FOUNDRY = "AZURE_FOUNDRY"
+    GROQ = "GROQ"
+    FAKE = "FAKE"
 
 
-class LogFormat(StrEnum):
-    """Supported logging formats."""
+class Alias(StrEnum):
+    """Stable model aliases used everywhere in code; mapped to concrete model ids
+    per provider in ``llm/aliases.py``. A model upgrade is a portal/config change,
+    never a code change."""
 
-    JSON = auto()
-    TEXT = auto()
-
-
-# ==============================================================================
-# Health
-# ==============================================================================
+    CHAT_MAIN = "chat-main"
+    CHAT_MINI = "chat-mini"
+    EMBED = "embed"
 
 
-class HealthStatus(StrEnum):
-    """Application health status."""
+class TicketStatus(StrEnum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED = "RESOLVED"
+    CLOSED = "CLOSED"
 
-    HEALTHY = auto()
-    DEGRADED = auto()
-    UNHEALTHY = auto()
 
-
-__all__ = [
-    "Environment",
-    "LLMProvider",
-    "EmbeddingProvider",
-    "ComputeDevice",
-    "VectorStoreType",
-    "RetrieverType",
-    "MessageRole",
-    "ResponseStatus",
-    "IssueCategory",
-    "Priority",
-    "EscalationQueue",
-    "DocumentType",
-    "LogFormat",
-    "HealthStatus",
-]
+# Convenience: all category / priority / queue string values, handy for validators & evals.
+CATEGORY_VALUES = tuple(c.value for c in IssueCategory)
+PRIORITY_VALUES = tuple(p.value for p in Priority)
+QUEUE_VALUES = tuple(q.value for q in EscalationQueue)

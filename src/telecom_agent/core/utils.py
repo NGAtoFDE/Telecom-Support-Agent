@@ -1,161 +1,54 @@
-"""
-Shared utility functions for the Telecom Support Agent.
+"""Small, dependency-light helpers: ids, hashing, time, text normalisation.
 
-This module contains small, reusable, dependency-free helper functions
-used across multiple application layers.
-
-Guidelines
-----------
-- Keep utilities generic and stateless.
-- Avoid business logic.
-- Avoid framework-specific helpers.
-- Keep this module dependency-free.
+Deterministic where it can be, so tests and evals reproduce.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from copy import deepcopy
-from datetime import UTC, datetime
-from typing import Any, TypeVar, cast
-from uuid import uuid4
-
-T = TypeVar("T")
+import hashlib
+import re
+import uuid
+from datetime import datetime, timezone
 
 
-# ==============================================================================
-# Time
-# ==============================================================================
+def new_trace_id() -> str:
+    """A sortable-ish, URL-safe id for correlating logs, spans and DB rows."""
+    return uuid.uuid4().hex
 
 
-def utc_now() -> datetime:
-    """
-    Return the current timezone-aware UTC datetime.
-    """
-    return datetime.now(UTC)
+def new_session_id() -> str:
+    return "sess_" + uuid.uuid4().hex[:8]
 
 
-# ==============================================================================
-# UUID
-# ==============================================================================
+def new_ticket_id() -> str:
+    return "TKT-" + uuid.uuid4().hex[:10].upper()
 
 
-def generate_uuid4() -> str:
-    """
-    Generate a random UUID version 4 string.
-    """
-    return str(uuid4())
+def utcnow_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
-# ==============================================================================
-# String
-# ==============================================================================
+def hour_bucket(ts: datetime | None = None) -> str:
+    ts = ts or datetime.now(timezone.utc)
+    return ts.strftime("%Y%m%d%H")
 
 
-def is_blank(value: str | None) -> bool:
-    """
-    Return True if the value is None or contains only whitespace.
-    """
-    return value is None or not value.strip()
+def idempotency_key(session_id: str, category: str, bucket: str | None = None) -> str:
+    """sha256(session_id + category + hour_bucket) — dedupes ticket creation on retry."""
+    bucket = bucket or hour_bucket()
+    raw = f"{session_id}|{category}|{bucket}".encode()
+    return hashlib.sha256(raw).hexdigest()
 
 
-def truncate(text: str, length: int = 100) -> str:
-    """
-    Truncate text while preserving readability.
-
-    Parameters
-    ----------
-    text:
-        Input text.
-
-    length:
-        Maximum output length, including the ellipsis.
-
-    Returns
-    -------
-    str
-        Truncated text.
-    """
-    if length < 4:
-        raise ValueError("length must be at least 4")
-
-    if len(text) <= length:
-        return text
-
-    return f"{text[: length - 3]}..."
+_WS = re.compile(r"\s+")
 
 
-# ==============================================================================
-# Validation
-# ==============================================================================
+def normalize_text(text: str) -> str:
+    return _WS.sub(" ", text or "").strip()
 
 
-def require(value: T | None, message: str) -> T:
-    """
-    Ensure a value is not None.
-
-    Raises
-    ------
-    ValueError
-        If the supplied value is None.
-    """
-    if value is None:
-        raise ValueError(message)
-
-    return value
-
-
-# ==============================================================================
-# Mapping
-# ==============================================================================
-
-
-def safe_get(
-    mapping: Mapping[str, Any],
-    key: str,
-    default: T | None = None,
-) -> Any | T:
-    """
-    Safely retrieve a value from a mapping.
-    """
-    return mapping.get(key, default)
-
-
-def deep_merge(
-    left: Mapping[str, Any],
-    right: Mapping[str, Any],
-) -> dict[str, Any]:
-    """
-    Recursively merge two mappings.
-
-    Values from the right mapping override the left mapping.
-    Uses deepcopy to guarantee the original dictionaries are not mutated.
-    """
-    result = deepcopy(dict(left))
-
-    for key, value in right.items():
-        if (
-            key in result
-            and isinstance(result[key], dict)
-            and isinstance(value, Mapping)
-        ):
-            # Use `cast` to explicitly tell the type checker the exact nested types
-            left_node = cast(dict[str, Any], result[key])
-            right_node = cast(Mapping[str, Any], value)
-            
-            result[key] = deep_merge(left_node, right_node)
-        else:
-            result[key] = deepcopy(value)
-
-    return result
-
-
-__all__ = [
-    "utc_now",
-    "generate_uuid4",
-    "is_blank",
-    "truncate",
-    "require",
-    "safe_get",
-    "deep_merge",
-]
+def approx_tokens(text: str) -> int:
+    """Cheap, provider-agnostic token estimate: ~4 chars/token. Good enough for budgets."""
+    if not text:
+        return 0
+    return max(1, len(text) // 4)

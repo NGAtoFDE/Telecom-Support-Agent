@@ -1,109 +1,115 @@
-"""
-Shared immutable data types for the Telecom Support Agent.
+"""Shared domain primitives used across layers.
 
-This module contains lightweight data structures shared across
-multiple application layers. These types improve readability,
-type safety, and consistency while remaining free of business
-logic.
-
-Guidelines
-----------
-- Keep types immutable whenever possible.
-- Avoid methods containing business logic.
-- Prefer dataclasses over dictionaries for shared objects.
-- Keep this module dependency-free.
+These are deliberately plain Pydantic models / dataclasses with no behaviour and no
+imports from higher layers. They are the vocabulary the whole app speaks.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from dataclasses import dataclass, field
-from types import MappingProxyType
-from typing import Any
+from typing import Literal
 
-from .enums import MessageRole, Priority
+from pydantic import BaseModel, Field
 
+from telecom_agent.core.enums import (
+    EscalationQueue,
+    IssueCategory,
+    Priority,
+    Provider,
+    Resolution,
+    TicketStatus,
+)
 
-# ==============================================================================
-# Helper Factories
-# ==============================================================================
-
-
-def _empty_metadata() -> Mapping[str, Any]:
-    """
-    Return an immutable empty mapping.
-
-    Using MappingProxyType prevents accidental mutation of metadata in
-    frozen dataclasses while avoiding shared mutable defaults.
-    """
-    return MappingProxyType({})
+Role = Literal["system", "user", "assistant"]
 
 
-# ==============================================================================
-# Conversation
-# ==============================================================================
-
-
-@dataclass(slots=True, frozen=True)
-class Message:
-    """Represents a single conversation message."""
-
-    role: MessageRole
+class Message(BaseModel):
+    role: Role
     content: str
 
 
-# ==============================================================================
-# Customer
-# ==============================================================================
+class CustomerCtx(BaseModel):
+    """Synthetic customer context. Never contains real PII."""
+
+    customer_id: str = "anon"
+    circle: str | None = None  # telecom "circle" ~ region, e.g. "Maharashtra"
+    plan: str | None = None
+    device: str | None = None
+    account_type: Literal["prepaid", "postpaid"] | None = None
 
 
-@dataclass(slots=True, frozen=True)
-class CustomerCtx:
-    """Shared customer context."""
+class Chunk(BaseModel):
+    """A retrieved piece of an approved KB document, citable by (doc_id, section)."""
 
-    customer_id: str
-    phone_number: str
-    account_id: str | None = None
-    plan_name: str | None = None
-    metadata: Mapping[str, Any] = field(
-        default_factory=_empty_metadata
-    )
+    doc_id: str
+    title: str
+    section: str
+    text: str
+    score: float = 0.0
+    source: Literal["dense", "bm25", "hybrid"] = "hybrid"
 
 
-# ==============================================================================
-# LLM
-# ==============================================================================
+class Citation(BaseModel):
+    doc_id: str
+    title: str
+    section: str
+    score: float = 0.0
 
 
-@dataclass(slots=True, frozen=True)
-class TokenUsage:
-    """Token usage statistics."""
-
+class TokenUsage(BaseModel):
     prompt_tokens: int = 0
     completion_tokens: int = 0
-    total_tokens: int = 0
+
+    @property
+    def total(self) -> int:
+        return self.prompt_tokens + self.completion_tokens
+
+    def add(self, other: TokenUsage) -> TokenUsage:
+        return TokenUsage(
+            prompt_tokens=self.prompt_tokens + other.prompt_tokens,
+            completion_tokens=self.completion_tokens + other.completion_tokens,
+        )
 
 
-# ==============================================================================
-# Ticket
-# ==============================================================================
+class LlmInfo(BaseModel):
+    provider: Provider
+    alias: str
+    model: str = ""
+    degraded: bool = False
 
 
-@dataclass(slots=True, frozen=True)
-class Ticket:
-    """Represents a support ticket."""
-
+class Ticket(BaseModel):
     ticket_id: str
-    customer_id: str
-    issue: str
+    session_id: str
+    category: IssueCategory
     priority: Priority
-    status: str
-    assigned_to: str | None = None
+    queue: EscalationQueue
+    status: TicketStatus = TicketStatus.OPEN
+    summary: str = ""
+    idempotency_key: str = ""
+    created_at: str = ""
 
 
-__all__ = [
-    "Message",
-    "CustomerCtx",
-    "TokenUsage",
-    "Ticket",
-]
+class Classification(BaseModel):
+    """Strict-JSON contract the classifier LLM must satisfy (validated with Pydantic)."""
+
+    category: IssueCategory
+    priority: Priority
+    confidence: float = Field(ge=0.0, le=1.0)
+    entities: dict = Field(default_factory=dict)
+
+
+class Verdict(BaseModel):
+    """Groundedness verifier output."""
+
+    groundedness: float = Field(ge=0.0, le=1.0)
+    supported: bool
+    unsupported_claims: list[str] = Field(default_factory=list)
+
+
+class TurnOutcome(BaseModel):
+    """Flattened outcome, convenient for persistence and API serialisation."""
+
+    resolution: Resolution
+    answer: str = ""
+    citations: list[Citation] = Field(default_factory=list)
+    ticket: Ticket | None = None
