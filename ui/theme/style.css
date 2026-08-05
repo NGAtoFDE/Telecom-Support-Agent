@@ -1,0 +1,443 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+html,
+body,
+[class*="css"] {
+    font-family: 'Inter', sans-serif !important;
+}
+
+.stApp {
+    background:
+        radial-gradient(circle at top left, #1e293b 0%, #0f172a 45%),
+        radial-gradient(circle at bottom right, #1e1b4b 0%, transparent 40%);
+    color: #e2e8f0;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.console-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+
+    background: linear-gradient(
+        90deg,
+        #60a5fa,
+        #818cf8,
+        #c084fc
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    margin-bottom: 6px;
+}
+
+.console-subtitle {
+    color: #94a3b8;
+    font-size: 0.92rem;
+}
+
+/* =========================================================
+   SIDEBAR
+========================================================= */
+
+[data-testid="stSidebar"] {
+
+    background:
+        rgba(15,23,42,0.80) !important;
+
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+
+    border-right:
+        1px solid rgba(255,255,255,0.08);
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+    color: #f8fafc;
+}
+
+/* =========================================================
+   CHAT MESSAGES
+========================================================= */
+
+[data-testid="stChatMessage"] {
+
+    border-radius: 20px;
+
+    padding: 16px;
+
+    margin-bottom: 14px;
+
+    background:
+        rgba(30,41,59,0.70);
+
+    border:
+        1px solid rgba(255,255,255,0.05);
+
+    backdrop-filter: blur(12px);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,0.25);
+
+    transition: all .25s ease;
+}
+
+[data-testid="stChatMessage"]:hover {
+
+    transform:
+        translateY(-2px);
+
+    border:
+        1px solid rgba(96,165,250,0.30);
+}
+
+/* =========================================================
+   AI RESPONSE CARD
+========================================================= */
+
+.assistant-card {
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(30,41,59,.95),
+            rgba(15,23,42,.95)
+        );
+
+    border-left:
+        4px solid #3b82f6;
+
+    border-radius: 18px;
+
+    padding: 16px;
+
+    margin-top: 8px;
+}
+
+.assistant-title {
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    text-transform: uppercase;
+
+    color: #93c5fd;
+
+    margin-bottom: 10px;
+}
+
+/* =========================================================
+   USER CARD
+========================================================= */
+
+.user-card {
+
+    background:
+        rgba(51,65,85,0.55);
+
+    border-left:
+        4px solid #64748b;
+
+    border-radius: 18px;
+
+    padding: 16px;
+}
+
+/* =========================================================
+   CHAT INPUT
+========================================================= */
+
+[data-testid="stChatInput"] {
+
+    background:
+        rgba(15,23,42,0.92) !important;
+
+    backdrop-filter:
+        blur(20px);
+
+    border-radius:
+        28px !important;
+
+    border:
+        1px solid rgba(255,255,255,0.10);
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.35);
+
+    padding-bottom: 0 !important;
+}
+
+[data-testid="stChatInput"]:focus-within {
+
+    border:
+        1px solid rgba(59,130,246,.40);
+}
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.stButton > button {
+
+    border: none;
+
+    color: white;
+
+    border-radius: 12px;
+
+    font-weight: 600;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #8b5cf6
+        );
+
+    transition: all .25s ease;
+}
+
+.stButton > button:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 20px rgba(99,102,241,.35);
+
+    color: white;
+}
+
+/* =========================================================
+   TICKET PANEL
+========================================================= */
+
+.ticket-card {
+
+    background:
+        rgba(30,41,59,0.75);
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+    border-radius: 18px;
+
+    padding: 16px;
+
+    margin-bottom: 14px;
+}
+
+.ticket-id {
+
+    font-size: 1.15rem;
+
+    font-weight: 700;
+
+    color: white;
+}
+
+.ticket-chip {
+
+    display: inline-block;
+
+    padding: 5px 10px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    font-weight: 600;
+
+    margin-right: 6px;
+}
+
+/* =========================================================
+   SOURCE CARDS
+========================================================= */
+
+.source-card {
+
+    background:
+        rgba(30,41,59,0.70);
+
+    border:
+        1px solid rgba(255,255,255,0.05);
+
+    border-radius: 16px;
+
+    padding: 14px;
+
+    margin-bottom: 10px;
+}
+
+/* =========================================================
+   OBSERVABILITY PANEL
+========================================================= */
+
+.trace-card {
+
+    background:
+        rgba(15,23,42,0.85);
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius: 14px;
+
+    padding: 12px;
+}
+
+[data-testid="stMetric"] {
+
+    background:
+        rgba(255,255,255,0.03);
+
+    padding: 12px;
+
+    border-radius: 12px;
+
+    border:
+        1px solid rgba(255,255,255,.04);
+}
+
+/* =========================================================
+   DEGRADED MODE ALERT
+========================================================= */
+
+.degraded-banner {
+
+    background:
+        rgba(251,191,36,.12);
+
+    border:
+        1px solid rgba(251,191,36,.30);
+
+    border-left:
+        5px solid #f59e0b;
+
+    color:
+        #fde68a;
+
+    padding:
+        14px;
+
+    border-radius:
+        14px;
+
+    margin-bottom:
+        16px;
+
+    backdrop-filter:
+        blur(8px);
+}
+
+/* =========================================================
+   MODERN BADGES
+========================================================= */
+
+.modern-badge {
+
+    padding:
+        4px 10px;
+
+    border-radius:
+        999px;
+
+    font-size:
+        11px;
+
+    font-weight:
+        600;
+
+    margin-right:
+        6px;
+
+    display:
+        inline-block;
+
+    transition:
+        all .2s ease;
+}
+
+.modern-badge:hover {
+
+    transform:
+        translateY(-1px);
+
+    filter:
+        brightness(1.15);
+}
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* =========================================================
+   EXPANDERS
+========================================================= */
+
+.streamlit-expanderHeader {
+
+    border-radius: 12px;
+}
+
+[data-testid="stExpander"] {
+
+    border:
+        1px solid rgba(255,255,255,.05);
+
+    border-radius:
+        14px;
+
+    background:
+        rgba(255,255,255,.02);
+}
+
+/* =========================================================
+   ANIMATIONS
+========================================================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+[data-testid="stChatMessage"] {
+    animation: fadeIn .25s ease;
+}
