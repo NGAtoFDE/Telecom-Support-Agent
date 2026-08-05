@@ -1,0 +1,36 @@
+{"id": "cls-001", "utterance": "There is no signal at all in my area since morning, complete outage", "expected_category": "NETWORK_COVERAGE", "expected_priority": "P1"}
+{"id": "cls-002", "utterance": "No service on my phone, looks like a tower outage in my locality", "expected_category": "NETWORK_COVERAGE", "expected_priority": "P1"}
+{"id": "cls-003", "utterance": "I have no network coverage and no signal anywhere in the building", "expected_category": "NETWORK_COVERAGE", "expected_priority": "P1"}
+{"id": "cls-004", "utterance": "My internet is very slow and videos keep buffering", "expected_category": "DATA_SLOW", "expected_priority": "P2"}
+{"id": "cls-005", "utterance": "Data speed has dropped drastically, pages load slowly", "expected_category": "DATA_SLOW", "expected_priority": "P2"}
+{"id": "cls-006", "utterance": "Getting throttled speed after some usage, browsing is slow", "expected_category": "DATA_SLOW", "expected_priority": "P2"}
+{"id": "cls-007", "utterance": "My calls keep dropping every few minutes", "expected_category": "CALL_DROP", "expected_priority": "P2"}
+{"id": "cls-008", "utterance": "Frequent dropped calls when I talk to anyone", "expected_category": "CALL_DROP", "expected_priority": "P2"}
+{"id": "cls-009", "utterance": "Calls disconnect automatically within seconds", "expected_category": "CALL_DROP", "expected_priority": "P2"}
+{"id": "cls-010", "utterance": "I was overcharged on my last bill, this is a wrong bill", "expected_category": "BILLING_DISPUTE", "expected_priority": "P3"}
+{"id": "cls-011", "utterance": "There is a double charge on my account, I need a refund", "expected_category": "BILLING_DISPUTE", "expected_priority": "P3"}
+{"id": "cls-012", "utterance": "I want to dispute a charge on my postpaid bill", "expected_category": "BILLING_DISPUTE", "expected_priority": "P3"}
+{"id": "cls-013", "utterance": "My recharge failed but money got deducted from my account", "expected_category": "RECHARGE_PAYMENT_FAILED", "expected_priority": "P3"}
+{"id": "cls-014", "utterance": "Payment failed during top up but the amount was debited", "expected_category": "RECHARGE_PAYMENT_FAILED", "expected_priority": "P3"}
+{"id": "cls-015", "utterance": "My mobile recharge did not go through though money deducted", "expected_category": "RECHARGE_PAYMENT_FAILED", "expected_priority": "P3"}
+{"id": "cls-016", "utterance": "I bought a new SIM and it is not activated yet", "expected_category": "SIM_ACTIVATION", "expected_priority": "P3"}
+{"id": "cls-017", "utterance": "Please activate my new SIM card", "expected_category": "SIM_ACTIVATION", "expected_priority": "P3"}
+{"id": "cls-018", "utterance": "My new SIM activation is pending for two days", "expected_category": "SIM_ACTIVATION", "expected_priority": "P3"}
+{"id": "cls-019", "utterance": "I want to port my number to your network via MNP", "expected_category": "SIM_SWAP_PORTING", "expected_priority": "P3"}
+{"id": "cls-020", "utterance": "Requested a SIM swap but the new SIM is not working", "expected_category": "SIM_SWAP_PORTING", "expected_priority": "P3"}
+{"id": "cls-021", "utterance": "My porting request through MNP is stuck", "expected_category": "SIM_SWAP_PORTING", "expected_priority": "P3"}
+{"id": "cls-022", "utterance": "I am travelling abroad and need international roaming", "expected_category": "ROAMING", "expected_priority": "P3"}
+{"id": "cls-023", "utterance": "Roaming is not working while I am overseas", "expected_category": "ROAMING", "expected_priority": "P3"}
+{"id": "cls-024", "utterance": "International roaming not connecting when I am abroad", "expected_category": "ROAMING", "expected_priority": "P3"}
+{"id": "cls-025", "utterance": "I was charged for a VAS subscription I never enabled", "expected_category": "VAS_SUBSCRIPTION", "expected_priority": "P3"}
+{"id": "cls-026", "utterance": "Please deactivate my caller tune subscription", "expected_category": "VAS_SUBSCRIPTION", "expected_priority": "P3"}
+{"id": "cls-027", "utterance": "Some VAS subscription pack is charging me daily, please stop it", "expected_category": "VAS_SUBSCRIPTION", "expected_priority": "P3"}
+{"id": "cls-028", "utterance": "My APN settings seem wrong and internet is not configured", "expected_category": "DEVICE_CONFIG", "expected_priority": "P2"}
+{"id": "cls-029", "utterance": "How do I set up mobile hotspot and tethering", "expected_category": "DEVICE_CONFIG", "expected_priority": "P2"}
+{"id": "cls-030", "utterance": "Need help with APN configuration for 5G on my phone", "expected_category": "DEVICE_CONFIG", "expected_priority": "P2"}
+{"id": "cls-031", "utterance": "My KYC verification is pending, please help", "expected_category": "ACCOUNT_KYC", "expected_priority": "P3"}
+{"id": "cls-032", "utterance": "Need to resubmit Aadhaar document for KYC", "expected_category": "ACCOUNT_KYC", "expected_priority": "P3"}
+{"id": "cls-033", "utterance": "Account verification failed, my KYC document was rejected", "expected_category": "ACCOUNT_KYC", "expected_priority": "P3"}
+{"id": "cls-034", "utterance": "What are your customer care working hours?", "expected_category": "OTHER", "expected_priority": "P4"}
+{"id": "cls-035", "utterance": "Can you tell me a bit about your company history?", "expected_category": "OTHER", "expected_priority": "P4"}
+{"id": "cls-036", "utterance": "I have a general question about the plans you offer", "expected_category": "OTHER", "expected_priority": "P4"}

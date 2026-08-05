@@ -1,0 +1,50 @@
+# Multi-stage build for the FastAPI service.
+# Stage 1 builds a wheel + installs deps into a venv; stage 2 is a slim runtime.
+
+# ---------- builder ----------
+FROM python:3.11-slim AS builder
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# Build deps for faiss/numpy wheels are already provided as manylinux wheels, so no
+# compiler is needed; keep the image lean.
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install --upgrade pip && pip install ".[dev]"
+
+# ---------- runtime ----------
+FROM python:3.11-slim AS runtime
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    APP_ENV=prod
+
+WORKDIR /app
+
+# venv with the installed package (prompt YAMLs ship inside the package via -e/editable
+# metadata; we also copy src so editable installs resolve and prompts/*.yaml are present).
+COPY --from=builder /opt/venv /opt/venv
+COPY src/ ./src/
+COPY data/ ./data/
+COPY scripts/ ./scripts/
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+
+RUN chmod +x /usr/local/bin/entrypoint.sh \
+    && adduser --disabled-password --gecos "" appuser \
+    && mkdir -p /app/data/index \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
+EXPOSE 8000
+
+# entrypoint builds the index if missing and seeds the DB, then starts uvicorn.
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["uvicorn", "telecom_agent.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,19 @@
+# Development tooling — lint, types, tests, pre-commit hooks.
+# Installs the runtime requirements too, so this is the only file a contributor needs:
+#
+#   .venv\Scripts\python.exe -m pip install -r requirements-dev.txt
+#
+# Then verify (fake provider — no cloud credentials required):
+#   set LLM_PROVIDER=fake  &&  pytest -q
+#   ruff check src tests ui evals scripts
+#   mypy src
+
+-r requirements.txt
+
+pytest==9.1.1
+pytest-cov==7.1.0
+pytest-asyncio==1.4.0
+ruff==0.16.0
+mypy==2.3.0
+pre-commit==4.6.1
+types-PyYAML==6.0.12.20260724

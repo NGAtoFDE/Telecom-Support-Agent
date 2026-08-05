@@ -1,0 +1,9 @@
+{
+  "_note": "Seeded baseline for the Groq (backup / degraded) path. Degraded mode is measured too — a number that only exists for the primary tells you nothing about the path the demo might actually run on. Refresh on Day 6.",
+  "provider": "GROQ",
+  "retrieval": { "recall@5": 0.85, "precision@3": 0.6 },
+  "classification": { "accuracy": 0.87, "macro_f1": 0.82 },
+  "groundedness": { "citation_coverage": 0.88, "escalation_recall": 1.0 },
+  "e2e": { "p95_latency_ms": 4000, "mean_cost_usd": 0.0009 },
+  "tolerance": 0.03
+}

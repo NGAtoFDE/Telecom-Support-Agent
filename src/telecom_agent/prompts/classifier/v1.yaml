@@ -1,0 +1,15 @@
+description: First-draft classifier. Kept for eval comparison against v2.
+output_schema: '{category, priority, confidence, entities}'
+variables: [categories, priorities, user_input]
+template: |
+  Classify the customer's issue.
+
+  Allowed categories: {categories}
+  Allowed priorities: {priorities}
+
+  Customer message:
+  """
+  {user_input}
+  """
+
+  Reply with JSON only: category, priority, confidence (0-1).

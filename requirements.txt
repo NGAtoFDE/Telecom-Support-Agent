@@ -1,0 +1,57 @@
+# Runtime dependencies — everything needed to RUN the API and the Streamlit console.
+#
+#   python -m venv .venv
+#   .venv\Scripts\python.exe -m pip install -r requirements.txt      # Windows
+#   ./.venv/bin/python -m pip install -r requirements.txt            # Linux / macOS
+#
+# Requires Python >=3.10 (3.10 / 3.11 recommended — faiss-cpu wheel availability).
+# pyproject.toml stays the source of truth for dependency *ranges*; the pins below are
+# the versions this project is known to work on. For a byte-exact reproduction of a
+# working environment (all transitive deps too), use requirements-lock.txt instead.
+# Dev/test tooling lives in requirements-dev.txt.
+
+# ---------- web / api ----------
+fastapi==0.140.6
+uvicorn[standard]==0.51.0
+python-multipart==0.0.32
+
+# ---------- models & validation ----------
+pydantic==2.13.4
+pydantic-settings==2.14.2
+PyYAML==6.0.3
+
+# ---------- orchestration ----------
+langgraph==1.2.9
+langchain-core==1.5.1
+
+# ---------- retrieval ----------
+faiss-cpu==1.14.3
+rank-bm25==0.2.2
+numpy==2.2.6
+
+# ---------- llm providers ----------
+azure-ai-inference==1.0.0b9
+openai==2.48.0                          # Groq is OpenAI-compatible
+
+# ---------- persistence ----------
+SQLAlchemy==2.0.51
+
+# ---------- http client (ui -> api, health probes) ----------
+httpx==0.28.1
+
+# ---------- observability ----------
+azure-monitor-opentelemetry==1.8.9
+opentelemetry-instrumentation-fastapi==0.64b0
+prometheus-client==0.26.0
+
+# ---------- config ----------
+python-dotenv==1.2.2
+
+# ---------- ui ----------
+# Only the UI image needs this; harmless in the API environment.
+streamlit==1.60.0
+
+# ---------- the project itself ----------
+# Editable install so `import telecom_agent` resolves from src/ with no sys.path hacks.
+# Keep this LAST. Drop it only if you install the package separately.
+-e .

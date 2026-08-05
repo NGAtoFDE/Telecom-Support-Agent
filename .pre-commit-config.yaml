@@ -1,0 +1,29 @@
+# Runs on every commit: format + lint + a light secret scan. Install with `pre-commit install`.
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.0
+    hooks:
+      - id: ruff            # lint
+        args: [--fix]
+      - id: ruff-format     # format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=2048]        # the FAISS index must not be committed
+      - id: detect-private-key
+      - id: check-merge-conflict
+
+  # Simple guard against committing a .env or obvious keys. detect-secrets is heavier;
+  # this regex hook is enough for a small team and has no extra dependency.
+  - repo: local
+    hooks:
+      - id: no-dotenv
+        name: block committing .env
+        entry: bash -c 'git diff --cached --name-only | grep -E "(^|/)\.env$" && echo "Do not commit .env" && exit 1 || exit 0'
+        language: system
+        pass_filenames: false

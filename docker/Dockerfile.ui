@@ -1,0 +1,26 @@
+# Separate image for the Streamlit console so UI and API scale independently.
+# The UI is a pure HTTP client: it never imports telecom_agent.
+
+FROM python:3.11-slim AS runtime
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install only what the UI needs. streamlit + requests cover the client.
+COPY pyproject.toml README.md ./
+RUN pip install --upgrade pip && pip install "streamlit>=1.36" "requests>=2.32" "httpx>=0.27"
+
+COPY ui/ ./ui/
+
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8501
+
+ENV API_BASE_URL=http://api:8000 \
+    API_KEY=dev-key-change-me
+
+CMD ["streamlit", "run", "ui/app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]

@@ -1,0 +1,13 @@
+graph TB
+    U["User"] --> ING["Container Apps Ingress<br/>HTTPS, managed certificate"]
+    ING --> UIC["Container App: ui<br/>Streamlit, 0-2 replicas"]
+    ING --> APIC["Container App: api<br/>FastAPI, 1-3 replicas"]
+    UIC -->|internal HTTP| APIC
+    APIC --> KV["Key Vault<br/>Foundry key, Groq key, API key"]
+    APIC --> AF["Azure AI Foundry<br/>chat-main, chat-mini, embed"]
+    APIC -->|failover| GQ["Groq API<br/>egress to internet"]
+    APIC --> AFS[("Azure Files<br/>FAISS index + SQLite")]
+    APIC --> AI["Application Insights<br/>traces, logs, metrics"]
+    ACR["Azure Container Registry"] -.->|images| UIC
+    ACR -.->|images| APIC
+    GH["GitHub Actions"] -.->|build, push, az containerapp update| ACR

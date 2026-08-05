@@ -1,0 +1,12 @@
+graph LR
+    C["Customer / Support Agent"] -->|chat| UI["Streamlit Console<br/>Azure Container Apps"]
+    UI -->|HTTPS JSON| API["FastAPI<br/>Azure Container Apps"]
+    API --> AG["Agent Orchestrator<br/>LangGraph"]
+    AG --> LLM["LLM Router"]
+    LLM -->|primary| AF["Azure AI Foundry<br/>services.ai.azure.com/models"]
+    AG --> VDB["FAISS index<br/>mounted volume"]
+    AG --> TOOL["Tool Layer<br/>ticketing, kb_search"]
+    TOOL --> DB[("SQLite on Azure Files<br/>tickets, sessions, feedback")]
+    API --> AI["Azure Monitor /<br/>Application Insights"]
+    KB["Synthetic KB"] -->|offline ingest, Foundry embeddings| VDB
+    KV["Azure Key Vault"] -.->|secrets| API

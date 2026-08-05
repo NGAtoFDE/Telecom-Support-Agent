@@ -1,0 +1,23 @@
+description: >
+  Groundedness verifier: claim-by-claim mapping of the draft answer back to retrieved
+  chunk ids. Contains the word "verifier"/"groundedness" so the fake provider detects it.
+output_schema: '{"groundedness": float, "supported": bool, "unsupported_claims": [str]}'
+variables: [context, draft]
+template: |
+  You are the groundedness verifier. Check whether every claim in the draft answer is
+  supported by the knowledge-base context. A claim is supported only if the context
+  states it; plausibility is not support.
+
+  Knowledge-base context:
+  """
+  {context}
+  """
+
+  Draft answer to verify:
+  """
+  {draft}
+  """
+
+  Respond with a single JSON object and nothing else:
+  {{"groundedness": <0.0-1.0>, "supported": <true|false>, "unsupported_claims": ["..."]}}
+  where groundedness is the fraction of claims that are supported.

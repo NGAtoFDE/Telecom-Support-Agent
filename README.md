@@ -77,15 +77,18 @@ and "escalation routing" from three separate rubric rows.
 
 ```mermaid
 graph LR
-    C["Customer / Support Agent"] -->|chat| UI["Streamlit Console<br/>Azure Container Apps"]
-    UI -->|HTTPS JSON| API["FastAPI<br/>Azure Container Apps"]
+    C["Customer / Support Agent"] -->|chat| D["Discord UI"]
+    C -->|chat| UI["Streamlit Console<br/>Azure Container Apps"]
+    D -->|HTTPS Webhook| API["FastAPI<br/>Azure Container Apps"]
+    UI -->|HTTPS JSON| API
     API --> AG["Agent Orchestrator<br/>LangGraph"]
     AG --> LLM["LLM Router"]
     LLM -->|primary| AF["Azure AI Foundry<br/>services.ai.azure.com/models"]
     LLM -->|failover| GQ["Groq<br/>api.groq.com/openai/v1"]
     AG --> VDB["FAISS index<br/>mounted volume"]
     AG --> TOOL["Tool Layer<br/>ticketing, kb_search"]
-    TOOL --> DB[("SQLite on Azure Files<br/>tickets, sessions, feedback")]
+    TOOL --> JIRA["Jira<br/>Ticket Escalation"]
+    TOOL --> DB[("SQLite on Azure Files<br/>sessions, feedback")]
     API --> AI["Azure Monitor /<br/>Application Insights"]
     KB["Synthetic KB"] -->|offline ingest, Foundry embeddings| VDB
     KV["Azure Key Vault"] -.->|secrets| API
@@ -93,16 +96,16 @@ graph LR
 
 ### 2.2 Container view and responsibilities
 
-| Container | Responsibility | Must NOT do | Owner |
-|---|---|---|---|
-| Streamlit UI | Render chat, citations, ticket panel, feedback, degraded-mode banner | Call an LLM directly, hold business logic | M4 |
-| FastAPI | Validation, auth, rate limit, tracing, orchestration entry | Contain prompt text or retrieval logic | M3 |
-| Agent orchestrator | Graph, routing policy, state transitions, budget enforcement | Know about HTTP or Streamlit | M1 |
-| LLM router | Provider selection, failover, circuit breaker, token accounting | Contain prompt text | M1 + M5 |
-| RAG subsystem | Ingestion, chunking, embedding, hybrid retrieval | Generate final answers | M2 |
-| Tool layer | Side effects: create/read tickets, escalate | Make LLM calls | M3 |
-| Store | Persistence + repository interfaces | Contain domain rules | M3 |
-| Observability | Structured logs, OTel spans to App Insights, cost accounting | Be bolted on at the end | M5 |
+| Container | Responsibility | Must NOT do |
+|---|---|---|
+| Streamlit UI | Render chat, citations, ticket panel, feedback, degraded-mode banner | Call an LLM directly, hold business logic |
+| FastAPI | Validation, auth, rate limit, Discord webhook processing, orchestration entry | Contain prompt text or retrieval logic |
+| Agent orchestrator | Graph, routing policy, state transitions, budget enforcement | Know about HTTP or Streamlit |
+| LLM router | Provider selection, failover, circuit breaker, token accounting | Contain prompt text |
+| RAG subsystem | Ingestion, chunking, embedding, hybrid retrieval | Generate final answers |
+| Tool layer | Side effects: create Jira tickets, escalate | Make LLM calls |
+| Store | Persistence + repository interfaces | Contain domain rules |
+| Observability | Structured logs, OTel spans to App Insights, cost accounting | Be bolted on at the end |
 
 ### 2.3 Dependency rule (enforced in code review)
 
@@ -226,8 +229,8 @@ code change.
 
 | Alias used in code | Foundry deployment | Groq equivalent | Used by |
 |---|---|---|---|
-| `chat-main` | a GPT-4.1-class deployment | `openai/gpt-oss-120b` | `draft_answer`, `verify` |
-| `chat-mini` | a GPT-4.1-mini-class deployment | `llama-3.1-8b-instant` | `classify`, `clarify` |
+| `chat-main` | a GPT-5-class deployment | `openai/gpt-oss-120b` | `draft_answer`, `verify` |
+| `chat-mini` | a GPT-5-mini-class deployment | `llama-3.1-8b-instant` | `classify`, `clarify` |
 | `embed` | `text-embedding-3-small` | **none — see below** | ingestion only |
 
 Confirm current Groq production model IDs against `https://api.groq.com/openai/v1/models`
@@ -295,18 +298,18 @@ demo might actually run on.
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant S as Streamlit
+    participant D as Discord / UI
     participant A as FastAPI
     participant G as Graph
     participant V as FAISS + BM25
     participant L as LLM Router
-    participant D as Ticket Store
+    participant J as Jira
 
-    U->>S: "no data since morning in Pune"
-    S->>A: POST /v1/chat {session_id, message}
+    U->>D: "no data since morning in Pune"
+    D->>A: POST /v1/discord/webhook (or /v1/chat)
     A->>A: validate, authenticate, issue trace_id
     A->>G: invoke(TriageState)
-    G->>D: load session memory, resolve pinned provider
+    G->>G: load session memory, resolve pinned provider
     G->>L: classify (classifier@v3, alias chat-mini)
     L->>L: Foundry healthy → route there
     L-->>G: DATA_SLOW, P2, confidence 0.88
@@ -316,13 +319,14 @@ sequenceDiagram
     L-->>G: 3 steps + [KB-114 §2.3]
     G->>L: verify claim ↔ chunk mapping
     L-->>G: groundedness 0.94
-    G->>D: persist turn, tokens, citations, provider
+    G->>G: persist turn, tokens, citations, provider
     G-->>A: response + citations + resolution
-    A-->>S: 200 JSON
-    S-->>U: steps, sources, "did this help?"
-    U->>S: thumbs down
-    S->>A: POST /v1/feedback
+    A-->>D: 200 JSON / Discord reply
+    D-->>U: steps, sources, "did this help?"
+    U->>D: thumbs down
+    D->>A: POST /v1/feedback
     A->>G: resume → escalate → create_ticket(NOC_L2)
+    G->>J: Create Jira Issue (Priority: P2)
 ```
 
 ---
@@ -449,6 +453,7 @@ telecom-support-agent/
 │       │   ├── deps.py             # DI providers: settings, retriever, graph, repos
 │       │   ├── routers/            # one module per resource, keeps files small
 │       │   │   ├── chat.py         # POST /v1/chat — main triage workflow
+│       │   │   ├── discord.py      # POST /v1/discord/webhook — Discord bot integration
 │       │   │   ├── classify.py     # POST /v1/classify — classification only
 │       │   │   ├── tickets.py      # ticket create / read / list endpoints
 │       │   │   ├── feedback.py     # POST /v1/feedback — thumbs + comment + trace_id
@@ -517,6 +522,7 @@ telecom-support-agent/
 │       ├── tools/                  # side-effecting functions the agent may call
 │       │   ├── registry.py         # name → callable + JSON schema, one place to add tools
 │       │   ├── ticketing.py        # create_ticket, get_ticket, escalate_ticket (idempotent)
+│       │   ├── jira_client.py      # Atlassian Jira API integration for real ticketing
 │       │   ├── kb_search.py        # exposes retrieval as a callable tool
 │       │   ├── diagnostics.py      # simulated outage check for a given circle
 │       │   └── validators.py       # sanitises tool arguments, blocks injected values
@@ -634,268 +640,13 @@ telecom-support-agent/
 
 ---
 
-## 9. Team Roles & Ownership
-
-Each member has a **primary component** (deep ownership, in `CODEOWNERS`) and a
-**vertical slice** they can demo alone. The slice guarantees everyone has commits on the
-AI path — 25% of the rubric, and the first thing evaluators check.
-
-| # | Role | Primary components | Vertical slice, owned end to end |
-|---|---|---|---|
-| **M1** | Tech Lead / Agent Orchestration | `agent/`, `prompts/`, `llm/router.py`, repo scaffolding, review gate | **Resolve path**: classify → retrieve → draft → verify → respond |
-| **M2** | RAG & Knowledge Engineer | `rag/`, `data/`, ingestion, index release artifact | **Citation experience**: KB curation → hybrid retrieval → citation rendered in UI |
-| **M3** | Backend & Tools Engineer | `api/`, `tools/`, `store/`, `memory/` | **Escalation path**: escalate node → `create_ticket` → ticket store → ticket API |
-| **M4** | Frontend & Demo Owner | `ui/`, `docs/demo-script.md` | **Support console**: chat + citations + ticket panel + feedback + degraded banner |
-| **M5** | Azure / LLMOps & Responsible AI | `infra/`, `docker/`, `.github/workflows/`, `observability/`, `evals/`, `llm/providers/` | **Provider reliability**: Foundry + Groq adapters → failover drill → App Insights dashboard → eval gate |
-
-### Critical-path note for a 7-day run
-
-M5 is on the critical path for **Day 1 only**: nobody can call a real model until the
-Foundry resource exists and the adapters work. Mitigation: `llm/providers/fake.py` ships
-first, on Day 1 morning, so the other four are never blocked. This is not optional —
-it is the difference between four people working in parallel and four people waiting.
-
-### Shared, non-negotiable obligations
-
-- Tests for your own module. New logic with no test does not merge.
-- At least two substantive PR reviews per person per day.
-- Your `docs/` section updated in the same PR as the code.
-- One new eval case whenever you add a capability.
-
-### CODEOWNERS
-
-```
-/src/telecom_agent/agent/       @m1-handle
-/src/telecom_agent/prompts/     @m1-handle
-/src/telecom_agent/llm/         @m1-handle @m5-handle   # router and adapters, two eyes
-/src/telecom_agent/rag/         @m2-handle
-/data/                          @m2-handle
-/src/telecom_agent/api/         @m3-handle
-/src/telecom_agent/tools/       @m3-handle
-/src/telecom_agent/store/       @m3-handle
-/ui/                            @m4-handle
-/infra/                         @m5-handle
-/docker/                        @m5-handle
-/.github/                       @m5-handle
-/evals/                         @m5-handle
-/docs/                          @m1-handle @m5-handle
-```
-
----
-
-## 10. GitHub Projects Workflow
-
-### 10.1 Board configuration
-
-One **GitHub Project** linked to the repo. In a 7-day run the board is not paperwork —
-it is the only thing preventing two people from building the same node.
-
-**Custom fields**
-
-| Field | Type | Values |
-|---|---|---|
-| Status | single select | `Backlog` · `Ready` · `In Progress` · `In Review` · `Blocked` · `Done` |
-| Component | single select | `agent` · `llm` · `rag` · `api` · `ui` · `infra` · `evals` · `docs` |
-| Owner | assignee | M1–M5 |
-| Day | single select | `Day 1` … `Day 7` — replaces sprint iterations at this timescale |
-| Priority | single select | `P0` demo-blocking · `P1` must-have · `P2` cut if short on time |
-| Rubric Area | single select | maps each task to the grading criterion it serves |
-
-The **Rubric Area** field is the highest-value five minutes of setup you will do.
-Group the board by it and you can instantly see which graded area is starved.
-
-**Views**
-
-1. `Today` — board grouped by Status, filtered to the current Day. The standup view.
-2. `By Component` — table grouped by Component. Ownership and load balance.
-3. `Blocked` — filtered to `Status = Blocked`. Reviewed at both daily standups.
-4. `Rubric Coverage` — grouped by Rubric Area. Confirms nothing graded is empty.
-5. `P0 only` — the code-freeze view for Days 6 and 7.
-
-**Automations** (Project → Workflows, all built in)
-
-- Item added → `Status = Backlog`
-- PR opened → `Status = In Review`
-- PR merged / issue closed → `Status = Done`
-- Auto-add: every new issue and PR joins the project
-
-### 10.2 Standups
-
-At this timescale, once a day is not enough. Two 10-minute checkpoints:
-**morning** (what I'm merging today, what I need from whom) and
-**evening** (what actually merged, what is blocked overnight). Blockers older than
-half a day get escalated to M1 and re-scoped.
-
-### 10.3 Branch and commit discipline
-
-```
-main                    # protected. Always deployable. No direct pushes, ever.
- └── feat/42-classify-node
-     feat/48-groq-adapter
-     fix/57-citation-offset
-     docs/64-azure-diagram
-```
-
-Pattern: `<type>/<issue-number>-<slug>`. The issue number is what auto-links the branch
-to the board item.
-
-Conventional Commits, scoped to the component:
-
-```
-feat(agent): add verifier node with claim-to-chunk mapping
-feat(llm): add Groq adapter with session-pinned failover
-fix(rag): preserve section heading when a chunk spans a page break
-docs(adr): record embeddings-at-ingest-only decision
-```
-
-Why enforce it: the changelog generates itself, and the Git-collaboration criterion (15%)
-is then satisfied by evidence rather than by assertion.
-
-### 10.4 Branch protection on `main`
-
-- Require a pull request; require **1 approving review** from Code Owners
-- Require status checks: `ci` (always), `eval` (when agent/prompt/rag changes)
-- Require conversation resolution; squash merge only, for linear history
-
-**Day-7 exception, agreed in advance:** during rehearsal, only `P0` demo-blocking fixes
-merge, and they need M1 plus the Demo Owner (M4) to approve. Write this rule down now,
-while everyone is calm.
-
-### 10.5 Pull request checklist
-
-```markdown
-## What and why
-Closes #<issue>
-
-## Checklist
-- [ ] Tests added or updated; `make test` green locally
-- [ ] `make eval` run if agent, prompt or retrieval code changed; delta pasted below
-- [ ] If LLM-facing: verified against BOTH providers, or explicitly noted why not
-- [ ] Docs / README section updated in this PR
-- [ ] No secrets, no real data, no PII in code, fixtures or screenshots
-- [ ] Layering respected (api → agent → rag/tools/llm/store, never reversed)
-- [ ] Screenshot or terminal output attached for UI/API changes
-
-## Eval delta
-| Metric | Baseline (foundry) | This PR |
-|---|---|---|
-```
-
----
-
-## 11. 7-Day Delivery Plan
-
-Two hard gates. Miss either and re-scope immediately rather than hoping.
-
-> **Gate 1 — end of Day 1: a clickable end-to-end demo on fake data.**
-> **Gate 2 — end of Day 5: deployed to Azure with a working URL.**
-
-### Day 1 — Foundations and contract freeze
-
-| Who | Deliverable |
-|---|---|
-| M1 | Repo scaffold, package installs, `state.py`, `core/enums.py`, graph skeleton with stub nodes returning canned state |
-| M3 | FastAPI app with all endpoints stubbed, returning fixture responses; Pydantic schemas complete |
-| M2 | KB authoring starts (target: 40+ docs across all 12 categories); `chunking.py` |
-| M4 | Streamlit shell wired to the stubbed API; chat + citation card skeletons |
-| M5 | **`llm/providers/fake.py` before anything else**, then: Azure RG, Foundry resource + `chat-main`/`chat-mini`/`embed` deployments, Key Vault, ACR, Container Apps environment, Dockerfiles, `ci.yml` |
-
-**Exit:** `docker compose up` gives a clickable UI answering from canned data.
-**API schemas and `TriageState` are frozen at end of Day 1.** Changing them later means
-five people rewriting at once — the schema freeze is what buys you parallelism.
-
-### Day 2 — Real models, real retrieval
-
-| Who | Deliverable |
-|---|---|
-| M5 | `azure_foundry.py` and `groq.py` adapters merged; `aliases.py`; `/readyz` probes both |
-| M1 | `classify` node real, against `chat-mini`; prompt `classifier@v1` |
-| M2 | `ingest.py` complete, FAISS + BM25 built, hybrid `retriever.py` |
-| M3 | SQLAlchemy models, ticket repository, `create_ticket` tool with idempotency key |
-| M4 | Citation card and debug drawer wired to real classification output |
-
-**Exit:** real classification of a real utterance against the real KB, visible in the UI.
-
-### Day 3 — Grounded answers
-
-| Who | Deliverable |
-|---|---|
-| M1 | `draft_answer` + `verify` nodes, `thresholds.py`, answer-not-found path |
-| M2 | Retrieval tuned; recall@5 measured and reported |
-| M3 | `escalate` node + queue routing table + ticket API endpoints |
-| M4 | Ticket panel, feedback widget, degraded banner |
-| M5 | Eval runners + golden set v1 (30 cases minimum, spread across all categories) |
-
-**Exit:** a grounded, cited answer for a realistic question. First eval numbers exist.
-
-### Day 4 — Full graph, memory, and the failover drill
-
-| Who | Deliverable |
-|---|---|
-| M1 | All three graph exits live; retry cap; token budget enforcement; provider pinning |
-| M3 | Session memory + follow-up handling; auth middleware; rate limiting |
-| M5 | **`failover_drill.sh`: break the Foundry key, prove Groq serves within 20 s, restore.** Record it — this clip is worth a rubric point on its own. App Insights wired |
-| M2 | Fill the KB gaps that the evals exposed on Day 3 |
-| M4 | Full conversation flow polish; follow-up turns visibly using memory |
-
-**Exit:** escalation path demo-able; failover proven and recorded; `groq.json` baseline exists.
-
-### Day 5 — Azure deployment and hardening
-
-| Who | Deliverable |
-|---|---|
-| M5 | `provision.sh` + `deploy.sh` run clean; both container apps live; secrets from Key Vault; App Insights dashboard |
-| M1 | Failure-matrix tests green |
-| M2 | Index published as a GitHub Release artifact |
-| M3 | Error envelope consistency; `/readyz` honest about every dependency |
-| M4 | Deployed UI smoke-tested from a phone and a second laptop |
-
-**Exit:** a working Azure URL a grader could open. **Gate 2.**
-
-### Day 6 — Freeze, measure, document
-
-Code freeze at 18:00. After that, `P0` only.
-
-- Final eval run on both providers; `baselines/` committed
-- `responsible-ai.md` completed with evidence per control
-- `cost-model.md`, `runbook.md`, `azure-deployment.md` merged
-- README screenshots; all four ADRs merged
-- Presentation deck built: problem → architecture → demo → challenges → future scope
-
-**Exit:** docs and deck done. No unmerged branches.
-
-### Day 7 — Rehearsal only
-
-- Two full rehearsals against the deployed URL, timed
-- One rehearsal against `docker compose` with the `fake` provider — the offline fallback
-- Each member presents their own 3 minutes; nobody narrates someone else's component
-- Q&A drill: every member must be able to answer "why LangGraph", "how do you know it
-  isn't hallucinating", "what happens when Azure is down", "what would you do next"
-- Zero code changes except `P0`
-
----
-
-## 12. Scope Cuts — What We Deliberately Are Not Building
-
-Naming the cuts is itself a deliverable: "we descoped X because Y, and here is the
-design for it" scores better than an unfinished X. All of these live in
-`infra/design/production-topology.md`.
-
-| Cut | Instead, this week | Why the cut is safe |
-|---|---|---|
-| Azure Database for PostgreSQL | SQLite in WAL mode on an Azure Files mount | One repository interface; the swap is a connection string. Demo concurrency is 1–2 users |
-| Alembic migrations | `create_all()` on startup | Schema is stable for 7 days; migrations matter when you have production data |
-| Azure AI Search | FAISS + BM25 locally | 40 documents do not need a managed index. Removes a provisioning dependency from the critical path |
-| Cross-encoder reranker | Hybrid fusion only | Adds latency and a tuning loop. Revisit if precision@3 is the bottleneck |
-| Terraform | `az` CLI scripts in `infra/azure/` | Still reproducible and reviewable; no state backend to manage |
-| Azure API Management | Container Apps ingress + API-key middleware | APIM is a day of learning for zero demo value. Documented as target state |
-| Managed identity to Foundry | Key Vault secret injected into Container Apps | Correct posture documented; keys are faster to get working under time pressure |
-| Full e2e browser tests | One `smoke.sh` + a rehearsed manual script | Playwright setup costs more than it saves at this scale |
-| Multilingual, voice, real CRM | Nothing | Explicitly out of scope in §1. New ideas go to a `v2` column, not into this week |
-
----
-
-## 13. Local Setup
+## 9. Local Setup
+
+Please refer to the separate **[setup.md](setup.md)** file for complete instructions on:
+- Local installation and database initialization
+- Environment variable configuration (including Discord and Jira)
+- Azure AI Foundry setup
+- Azure Container Apps deployment
 
 ```bash
 # 1. clone and install the package in editable mode
@@ -1140,30 +891,16 @@ Levers worth naming in the deck: cache classification of repeated utterances; dr
 from 8 to 5 once precision allows; use `chat-mini` for the verifier (already done); cap
 sessions at 12 000 tokens; route deterministic categories to rules and skip the LLM entirely.
 
----
-
-## 19. Risks
-
-| Risk | Impact | Mitigation |
-|---|---|---|
-| Foundry model unavailable in the chosen region | Day 1 blocked, whole plan slips | Check model/region availability **before** Day 1; `fake` provider means Day 1 proceeds regardless |
-| Azure quota or subscription limits on a shared training tenant | Cannot deploy | This is precisely why Groq is in the design; also request quota on Day 1, not Day 5 |
-| Groq model ID deprecated mid-week | Failover silently broken | `/readyz` probes both providers; verify IDs against `/v1/models` on Day 2 and again on Day 6 |
-| Synthetic KB too thin → retrieval always misses | Demo looks broken | M2 targets 40+ docs across all 12 categories by end of Day 2; evals on Day 3 expose gaps in time to fix |
-| Schema churn after Day 1 | Five people rewriting at once | Contract freeze at end of Day 1; changes need M1 approval and a board item |
-| Everyone blocked on the graph | A lost day out of seven | `fake.py` ships Day 1 morning; endpoints stubbed before they are real |
-| Demo depends on live credentials | Single point of failure on the day | Rehearse the `fake`-provider offline path on Day 7; keep the recorded failover clip |
-| Merge conflicts in `graph.py` | Velocity collapse | One node per file; only M1 edits `graph.py`; others add nodes |
-| Scope creep | Nothing finished | §12 is binding. New ideas go to a `v2` column |
+| `database is locked` | concurrent writers | SQLite is single-writer; WAL is on; keep one API replica writing, or move to Postgres |
+| deployment create fails on model version | version string moved | `az cognitiveservices account list-models ... -o table` and substitute |
+| everything works but answers are generic | running the `fake` provider | set `LLM_PROVIDER` to a real provider and `make ingest` |
 
 ---
 
-## Contributors
+## 13. Security reminders (personal project)
 
-| Member | Role | GitHub | Primary paths |
-|---|---|---|---|
-| _name_ | Tech Lead / Agent Orchestration | `@handle` | `agent/`, `prompts/`, `llm/router.py` |
-| _name_ | RAG & Knowledge Engineer | `@handle` | `rag/`, `data/` |
-| _name_ | Backend & Tools Engineer | `@handle` | `api/`, `tools/`, `store/` |
-| _name_ | Frontend & Demo Owner | `@handle` | `ui/` |
-| _name_ | Azure / LLMOps & Responsible AI | `@handle` | `infra/`, `docker/`, `.github/`, `evals/`, `llm/providers/` |
+- Never commit `.env`, keys, or the index. `.gitignore` already excludes them.
+- Rotate any key that touches a terminal you shared.
+- Use a **personal** Azure subscription and Groq account only — do not point this at any
+  employer tenant, subscription, or data.
+- The app logs are PII-redacted, but keep using **synthetic data only**.

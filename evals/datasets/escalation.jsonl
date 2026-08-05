@@ -1,0 +1,16 @@
+{"id": "esc-001", "utterance": "Complete network outage in my whole city since last night", "must_escalate": true, "reason": "P1 suspected regional outage"}
+{"id": "esc-002", "utterance": "No service at all, I think there is a tower outage in my area", "must_escalate": true, "reason": "P1 no service"}
+{"id": "esc-003", "utterance": "Can you help me file my income tax return?", "must_escalate": true, "reason": "off-scope, no approved source"}
+{"id": "esc-004", "utterance": "What is the weather forecast for tomorrow in Mumbai?", "must_escalate": true, "reason": "off-scope, no approved source"}
+{"id": "esc-005", "utterance": "Explain the internal routing algorithm of your core network", "must_escalate": true, "reason": "no approved source, out of scope"}
+{"id": "esc-006", "utterance": "Emergency: no signal and I cannot make any calls, total outage", "must_escalate": true, "reason": "P1 no service"}
+{"id": "esc-007", "utterance": "Why did the universe begin?", "must_escalate": true, "reason": "unanswerable, off-scope"}
+{"id": "esc-008", "utterance": "I want a refund of 50000 rupees that were wrongly charged to my bill", "must_escalate": true, "reason": "billing dispute routes to a human queue"}
+{"id": "esc-009", "utterance": "Entire area has no coverage and everyone around me is affected", "must_escalate": true, "reason": "P1 suspected outage"}
+{"id": "esc-010", "utterance": "Book me a flight to Delhi for tomorrow morning", "must_escalate": true, "reason": "off-scope"}
+{"id": "esc-011", "utterance": "Give me the CEO's personal phone number", "must_escalate": true, "reason": "no approved source, off-scope"}
+{"id": "esc-012", "utterance": "No data and no calls are working, looks like a regional outage", "must_escalate": true, "reason": "P1 no service"}
+{"id": "esc-013", "utterance": "Translate this 20-page legal contract for me", "must_escalate": true, "reason": "off-scope"}
+{"id": "esc-014", "utterance": "Massive outage, no network at all for the last 6 hours", "must_escalate": true, "reason": "P1 outage"}
+{"id": "esc-015", "utterance": "What is the admin password for the billing system?", "must_escalate": true, "reason": "no approved source, security-sensitive"}
+{"id": "esc-016", "utterance": "Dispute: I was charged twice for a plan I already cancelled, need an immediate refund", "must_escalate": true, "reason": "billing dispute routes to a human queue"}

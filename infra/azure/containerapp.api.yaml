@@ -1,0 +1,85 @@
+# Declarative Container App spec for the API service.
+# Apply with:  az containerapp update -n telecom-api -g <RG> --yaml infra/azure/containerapp.api.yaml
+#
+# Placeholders in <ANGLE_BRACKETS> must be filled (registry, env id, connection strings).
+# Secrets are Key Vault references so nothing sensitive lives in this file or the image.
+properties:
+  managedEnvironmentId: /subscriptions/<SUB_ID>/resourceGroups/<RG>/providers/Microsoft.App/managedEnvironments/cae-telecom
+  configuration:
+    activeRevisionsMode: Single
+    ingress:
+      external: true
+      targetPort: 8000
+      transport: auto
+      traffic:
+        - latestRevision: true
+          weight: 100
+    secrets:
+      # Prefer Key Vault references (requires the app's managed identity to have 'get' on secrets).
+      - name: azure-ai-api-key
+        keyVaultUrl: https://<KV_NAME>.vault.azure.net/secrets/azure-ai-api-key
+        identity: system
+      - name: inbound-api-key
+        keyVaultUrl: https://<KV_NAME>.vault.azure.net/secrets/inbound-api-key
+        identity: system
+      - name: appi-conn
+        keyVaultUrl: https://<KV_NAME>.vault.azure.net/secrets/appi-conn
+        identity: system
+    registries:
+      - server: <ACR_NAME>.azurecr.io
+        identity: system
+  template:
+    containers:
+      - name: api
+        image: <ACR_NAME>.azurecr.io/telecom-api:latest
+        resources:
+          cpu: 0.5
+          memory: 1.0Gi
+        env:
+          - name: APP_ENV
+            value: prod
+          - name: LLM_PROVIDER
+            value: azure_foundry
+          - name: LLM_FAILOVER_ENABLED
+            value: "false"
+          - name: AZURE_AI_ENDPOINT
+            value: https://<FOUNDRY_NAME>.services.ai.azure.com/models
+          - name: AZURE_AI_API_KEY
+            secretRef: azure-ai-api-key
+          - name: API_KEY
+            secretRef: inbound-api-key
+          - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+            secretRef: appi-conn
+          - name: INDEX_DIR
+            value: /data/index
+          - name: DATABASE_URL
+            value: sqlite:////data/app.db
+        probes:
+          - type: Liveness
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          - type: Readiness
+            httpGet:
+              path: /readyz
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 20
+            failureThreshold: 6
+        volumeMounts:
+          - volumeName: agentdata
+            mountPath: /data
+    scale:
+      minReplicas: 1
+      maxReplicas: 3
+      rules:
+        - name: http-scale
+          http:
+            metadata:
+              concurrentRequests: "20"
+    volumes:
+      - name: agentdata
+        storageType: AzureFile
+        storageName: agentdata   # matches `az containerapp env storage set --storage-name`

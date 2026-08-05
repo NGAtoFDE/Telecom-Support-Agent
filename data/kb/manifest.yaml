@@ -1,0 +1,262 @@
+# Knowledge Base manifest — doc_id -> metadata.
+# Read by telecom_agent.rag.loaders.load_manifest. All content is SYNTHETIC.
+# owner M2 = RAG & Knowledge Engineer (see README §9).
+documents:
+  - doc_id: KB-101
+    title: "No Signal / No Service — First-Line Diagnostics"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-15"
+    category: NETWORK_COVERAGE
+  - doc_id: KB-102
+    title: "Policy — Network Coverage and Outage SLA"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-15"
+    category: NETWORK_COVERAGE
+  - doc_id: KB-103
+    title: "FAQ — Weak Indoor Coverage"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-20"
+    category: NETWORK_COVERAGE
+  - doc_id: KB-104
+    title: "Suspected Tower / Circle Outage — NOC Handover"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-01"
+    category: NETWORK_COVERAGE
+  - doc_id: KB-110
+    title: "Slow Data / No Internet — APN Reset"
+    owner: M2
+    version: "1.1"
+    effective_date: "2026-02-10"
+    category: DATA_SLOW
+  - doc_id: KB-111
+    title: "Policy — Fair Usage (FUP) for Data Plans"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-15"
+    category: DATA_SLOW
+  - doc_id: KB-112
+    title: "FAQ — Data Speed Expectations"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-22"
+    category: DATA_SLOW
+  - doc_id: KB-113
+    title: "Slow Data Despite Full Signal — Band and Congestion Checks"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-12"
+    category: DATA_SLOW
+  - doc_id: KB-120
+    title: "Frequent Call Drops — Diagnostics"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-18"
+    category: CALL_DROP
+  - doc_id: KB-121
+    title: "FAQ — VoLTE and HD Voice"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-25"
+    category: CALL_DROP
+  - doc_id: KB-122
+    title: "Policy — Call Drop Handling and Compensation"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-05"
+    category: CALL_DROP
+  - doc_id: KB-130
+    title: "Billing Dispute — Investigation Runbook"
+    owner: M2
+    version: "1.2"
+    effective_date: "2026-02-14"
+    category: BILLING_DISPUTE
+  - doc_id: KB-131
+    title: "Policy — Billing Adjustments and Refunds"
+    owner: M2
+    version: "1.1"
+    effective_date: "2026-01-30"
+    category: BILLING_DISPUTE
+  - doc_id: KB-132
+    title: "FAQ — There is a wrong charge on my bill"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-02"
+    category: BILLING_DISPUTE
+  - doc_id: KB-140
+    title: "Recharge Failed but Money Deducted — Runbook"
+    owner: M2
+    version: "1.1"
+    effective_date: "2026-02-08"
+    category: RECHARGE_PAYMENT_FAILED
+  - doc_id: KB-141
+    title: "Policy — Failed Recharge Refund Timeline"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-28"
+    category: RECHARGE_PAYMENT_FAILED
+  - doc_id: KB-142
+    title: "FAQ — Money deducted but recharge not done"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-03"
+    category: RECHARGE_PAYMENT_FAILED
+  - doc_id: KB-150
+    title: "New SIM Activation — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-16"
+    category: SIM_ACTIVATION
+  - doc_id: KB-151
+    title: "FAQ — How long does SIM activation take?"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-24"
+    category: SIM_ACTIVATION
+  - doc_id: KB-152
+    title: "Policy — Activation KYC Requirements"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-19"
+    category: SIM_ACTIVATION
+  - doc_id: KB-160
+    title: "Mobile Number Portability (MNP) — Porting Runbook"
+    owner: M2
+    version: "1.1"
+    effective_date: "2026-02-11"
+    category: SIM_SWAP_PORTING
+  - doc_id: KB-161
+    title: "Policy — Porting (MNP) Rules and Timelines"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-27"
+    category: SIM_SWAP_PORTING
+  - doc_id: KB-162
+    title: "FAQ — SIM Swap / Replacement"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-04"
+    category: SIM_SWAP_PORTING
+  - doc_id: KB-170
+    title: "International Roaming — Activation Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-21"
+    category: ROAMING
+  - doc_id: KB-171
+    title: "Policy — International Roaming Charges"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-26"
+    category: ROAMING
+  - doc_id: KB-172
+    title: "FAQ — Roaming Before You Travel"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-06"
+    category: ROAMING
+  - doc_id: KB-173
+    title: "No Network While Roaming Abroad — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-13"
+    category: ROAMING
+  - doc_id: KB-180
+    title: "Deactivate an Unwanted VAS Subscription — Runbook"
+    owner: M2
+    version: "1.1"
+    effective_date: "2026-02-09"
+    category: VAS_SUBSCRIPTION
+  - doc_id: KB-181
+    title: "FAQ — Caller Tune and Subscription Packs"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-23"
+    category: VAS_SUBSCRIPTION
+  - doc_id: KB-182
+    title: "Policy — VAS Activation Consent"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-29"
+    category: VAS_SUBSCRIPTION
+  - doc_id: KB-183
+    title: "FAQ — Refund for an Unwanted Subscription"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-07"
+    category: VAS_SUBSCRIPTION
+  - doc_id: KB-190
+    title: "Device APN and Hotspot Configuration — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-17"
+    category: DEVICE_CONFIG
+  - doc_id: KB-191
+    title: "FAQ — Tethering and Mobile Hotspot"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-31"
+    category: DEVICE_CONFIG
+  - doc_id: KB-192
+    title: "Enable Wi-Fi Calling (VoWiFi) — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-15"
+    category: DEVICE_CONFIG
+  - doc_id: KB-200
+    title: "KYC Re-verification — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-14"
+    category: ACCOUNT_KYC
+  - doc_id: KB-201
+    title: "Policy — KYC and Connection Verification"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-14"
+    category: ACCOUNT_KYC
+  - doc_id: KB-202
+    title: "FAQ — KYC and Identity Verification"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-24"
+    category: ACCOUNT_KYC
+  - doc_id: KB-210
+    title: "FAQ — General Help and Self-Care"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-15"
+    category: OTHER
+  - doc_id: KB-211
+    title: "General Escalation and Handover — Runbook"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-15"
+    category: OTHER
+  - doc_id: KB-212
+    title: "FAQ — Stores, Documents and Timings"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-01-25"
+    category: OTHER
+  - doc_id: KB-220
+    title: "How do I check my current plan and validity?"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-16"
+    category: OTHER
+  - doc_id: KB-221
+    title: "How do I activate Do Not Disturb (DND) to stop spam?"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-16"
+    category: OTHER
+  - doc_id: KB-222
+    title: "How do I raise a complaint and get a reference number?"
+    owner: M2
+    version: "1.0"
+    effective_date: "2026-02-16"
+    category: OTHER

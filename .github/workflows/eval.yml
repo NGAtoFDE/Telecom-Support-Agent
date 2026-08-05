@@ -1,0 +1,37 @@
+name: eval
+# Golden-set regression. Runs when the AI path changes; blocks PRs that lower scores.
+on:
+  pull_request:
+    paths:
+      - "src/telecom_agent/agent/**"
+      - "src/telecom_agent/prompts/**"
+      - "src/telecom_agent/rag/**"
+      - "evals/**"
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LLM_PROVIDER: fake        # provider-independent metrics run offline in CI
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Retrieval eval
+        run: python -m evals.runners.run_retrieval
+      - name: Classification eval
+        run: python -m evals.runners.run_classification
+      - name: Compare against baseline
+        run: |
+          echo "Compare evals/reports/*.md against evals/baselines/*.json here."
+          echo "Fail the job if a provider-sensitive metric regresses beyond tolerance."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: eval-reports
+          path: evals/reports/

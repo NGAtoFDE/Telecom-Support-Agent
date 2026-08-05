@@ -1,0 +1,36 @@
+# ---- secrets & env ----
+.env
+.env.*
+!.env.example
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- build outputs / data ----
+data/index/
+*.db
+*.db-wal
+*.db-shm
+data/app.db
+
+# ---- eval reports ----
+evals/reports/
+
+# ---- os / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

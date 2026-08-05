@@ -1,0 +1,42 @@
+name: docker
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      # Build always (validates the Dockerfiles on every push).
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.api
+          push: false
+          tags: telecom-agent-api:ci
+      - name: Build UI image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.ui
+          push: false
+          tags: telecom-agent-ui:ci
+
+      # Push only when ACR secrets are configured (no-ops on forks).
+      - name: Log in to ACR
+        if: ${{ secrets.ACR_LOGIN_SERVER != '' }}
+        uses: azure/docker-login@v2
+        with:
+          login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Push images
+        if: ${{ secrets.ACR_LOGIN_SERVER != '' }}
+        run: |
+          echo "docker tag + push both images to ${{ secrets.ACR_LOGIN_SERVER }}"

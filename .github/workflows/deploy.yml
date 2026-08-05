@@ -1,0 +1,26 @@
+name: deploy
+# az containerapp update on merge to main. Guarded on AZURE_CREDENTIALS so it no-ops
+# on forks / when the secret is absent. Required repo secrets:
+#   AZURE_CREDENTIALS, ACR_LOGIN_SERVER, RESOURCE_GROUP, API_APP_NAME, UI_APP_NAME
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.AZURE_CREDENTIALS != '' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Deploy container apps
+        run: bash infra/azure/deploy.sh
+        env:
+          ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+          RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
+          API_APP_NAME: ${{ secrets.API_APP_NAME }}
+          UI_APP_NAME: ${{ secrets.UI_APP_NAME }}

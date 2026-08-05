@@ -1,0 +1,16 @@
+stateDiagram-v2
+    [*] --> load_session
+    load_session --> classify
+    classify --> clarify: confidence < 0.6
+    clarify --> persist
+    classify --> escalate: priority == P1
+    classify --> retrieve
+    retrieve --> escalate: no chunk above score threshold
+    retrieve --> draft_answer
+    draft_answer --> verify
+    verify --> respond: grounded and cited
+    verify --> retrieve: retry, attempt < 2
+    verify --> escalate: retry budget exhausted
+    respond --> persist
+    escalate --> persist
+    persist --> [*]
